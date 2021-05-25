@@ -1,0 +1,1 @@
+web: gunicorn tesis-server:app
