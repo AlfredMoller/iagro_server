@@ -417,6 +417,61 @@ def reg_alarm():
             connection.close()
 
 
+
+@app.route('/alarm_modify', methods=['POST'])
+def mod_alarm():
+    if request.method == 'POST':
+
+        desc_alrm = request.form['description']
+        time_alrm = request.form['time']
+        date_alrm = request.form['date']
+
+        idbr_alrm = request.form['broadcast']
+        user_alrm = request.form['user']
+
+        try:
+            connection = mysql.connector.connect(host='localhost', database='tesis1', user='root', password='')
+            cursor = connection.cursor()
+
+            sql = "SELECT * FROM alarm_task WHERE time =%s and date =%s and iduser = %s"
+            cursor.execute(sql, (time_alrm, date_alrm, user_alrm,))
+            account = cursor.fetchone()
+            if account:
+                msgexist = "Esta alarma ya fue programada anteriormente!"
+                print(msgexist)
+                return jsonify(message=msgexist)
+
+            else:
+
+                date_conv = datetime.strptime(date_alrm, "%d-%m-%Y").strftime("%Y-%m-%d")
+
+                date_string = date_conv + " " + time_alrm
+
+                matches = ["a.", "p.", "m."]
+
+                querywords = date_string.split()
+                resultwords = [word for word in querywords if word.lower() not in matches]
+                dtm_res = ' '.join(resultwords)
+                print("Hora a editar:",time_alrm, date_alrm, desc_alrm, dtm_res, idbr_alrm, user_alrm)
+
+                ##sql = "UPDATE alarm_task SET time=%s, date=%s, description=%s, datetime_alrm=%s  where idbroadcast =%s and iduser =%s"
+                ##args = (time_alrm, date_alrm, desc_alrm, dtm_res, idbr_alrm, user_alrm)
+                ##cursor.execute(sql, args)
+                cursor.execute(""" UPDATE alarm_task SET time=%s, date=%s, description=%s, datetime_alrm=%s  where idbroadcast =%s and iduser =%s  """, (time_alrm, date_alrm, desc_alrm, dtm_res, idbr_alrm, user_alrm))
+                connection.commit()
+                msgok = "Su actividad fue Editada!!!"
+                print(msgok)
+                return jsonify(message=msgok)
+
+        except Error as error:
+            print(error)
+            msgfail = "Error al intentar Editar!"
+            return jsonify(message=msgfail)
+
+        finally:
+            connection.close()
+
+
 @app.route('/alarm_cancel', methods=['POST'])
 def can_alarm():
     if request.method == 'POST':
@@ -448,7 +503,7 @@ def can_alarm():
 def get_list(usu):
     markers = None
     # sql = "select idhistory, latitude, longitude, history_date, city from history where history_date = %s and iduser= %s"
-    sql = "select time,date,status,description,idbroadcast from alarm_task where alarm_task.status <> 'Cancelado' and iduser  = '{0}'".format(usu)
+    sql = "select time,date,status,description,idbroadcast from alarm_task where alarm_task.status = 'Programado'  and iduser  = '{0}'".format(usu)
     args = (usu)
 
     try:
