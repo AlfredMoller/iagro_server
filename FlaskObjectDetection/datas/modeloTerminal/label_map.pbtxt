@@ -1,0 +1,14 @@
+item {
+  id: 1
+  name: 'Aracnido Rojo'
+}
+
+item {
+  id: 2
+  name: 'Pulgon'
+}
+
+item {
+  id: 3
+  name: 'Mosca Blanca'
+}
